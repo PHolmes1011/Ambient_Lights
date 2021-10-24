@@ -1,5 +1,5 @@
 //***************************************************************************************
-// AmbientLightApp.cpp by Frank Luna (C) 2015 All Rights Reserved.
+// LitColumnsApp.cpp by Frank Luna (C) 2015 All Rights Reserved.
 //***************************************************************************************
 
 #include "../../Common/d3dApp.h"
@@ -51,13 +51,13 @@ struct RenderItem
     int BaseVertexLocation = 0;
 };
 
-class AmbientLightApp : public D3DApp
+class LitColumnsApp : public D3DApp
 {
 public:
-    AmbientLightApp(HINSTANCE hInstance);
-    AmbientLightApp(const AmbientLightApp& rhs) = delete;
-    AmbientLightApp& operator=(const AmbientLightApp& rhs) = delete;
-    ~AmbientLightApp();
+    LitColumnsApp(HINSTANCE hInstance);
+    LitColumnsApp(const LitColumnsApp& rhs) = delete;
+    LitColumnsApp& operator=(const LitColumnsApp& rhs) = delete;
+    ~LitColumnsApp();
 
     virtual bool Initialize()override;
 
@@ -137,7 +137,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance,
 
     try
     {
-        AmbientLightApp theApp(hInstance);
+        LitColumnsApp theApp(hInstance);
         if(!theApp.Initialize())
             return 0;
 
@@ -150,18 +150,18 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance,
     }
 }
 
-AmbientLightApp::AmbientLightApp(HINSTANCE hInstance)
+LitColumnsApp::LitColumnsApp(HINSTANCE hInstance)
     : D3DApp(hInstance)
 {
 }
 
-AmbientLightApp::~AmbientLightApp()
+LitColumnsApp::~LitColumnsApp()
 {
     if(md3dDevice != nullptr)
         FlushCommandQueue();
 }
 
-bool AmbientLightApp::Initialize()
+bool LitColumnsApp::Initialize()
 {
     if(!D3DApp::Initialize())
         return false;
@@ -193,7 +193,7 @@ bool AmbientLightApp::Initialize()
     return true;
 }
  
-void AmbientLightApp::OnResize()
+void LitColumnsApp::OnResize()
 {
     D3DApp::OnResize();
 
@@ -202,7 +202,7 @@ void AmbientLightApp::OnResize()
     XMStoreFloat4x4(&mProj, P);
 }
 
-void AmbientLightApp::Update(const GameTimer& gt)
+void LitColumnsApp::Update(const GameTimer& gt)
 {
     OnKeyboardInput(gt);
 	UpdateCamera(gt);
@@ -227,7 +227,7 @@ void AmbientLightApp::Update(const GameTimer& gt)
 	UpdateMainPassCB(gt);
 }
 
-void AmbientLightApp::Draw(const GameTimer& gt)
+void LitColumnsApp::Draw(const GameTimer& gt)
 {
     auto cmdListAlloc = mCurrFrameResource->CmdListAlloc;
 
@@ -284,7 +284,7 @@ void AmbientLightApp::Draw(const GameTimer& gt)
     mCommandQueue->Signal(mFence.Get(), mCurrentFence);
 }
 
-void AmbientLightApp::OnMouseDown(WPARAM btnState, int x, int y)
+void LitColumnsApp::OnMouseDown(WPARAM btnState, int x, int y)
 {
     mLastMousePos.x = x;
     mLastMousePos.y = y;
@@ -292,12 +292,12 @@ void AmbientLightApp::OnMouseDown(WPARAM btnState, int x, int y)
     SetCapture(mhMainWnd);
 }
 
-void AmbientLightApp::OnMouseUp(WPARAM btnState, int x, int y)
+void LitColumnsApp::OnMouseUp(WPARAM btnState, int x, int y)
 {
     ReleaseCapture();
 }
 
-void AmbientLightApp::OnMouseMove(WPARAM btnState, int x, int y)
+void LitColumnsApp::OnMouseMove(WPARAM btnState, int x, int y)
 {
     if((btnState & MK_LBUTTON) != 0)
     {
@@ -329,11 +329,11 @@ void AmbientLightApp::OnMouseMove(WPARAM btnState, int x, int y)
     mLastMousePos.y = y;
 }
  
-void AmbientLightApp::OnKeyboardInput(const GameTimer& gt)
+void LitColumnsApp::OnKeyboardInput(const GameTimer& gt)
 {
 }
  
-void AmbientLightApp::UpdateCamera(const GameTimer& gt)
+void LitColumnsApp::UpdateCamera(const GameTimer& gt)
 {
 	// Convert Spherical to Cartesian coordinates.
 	mEyePos.x = mRadius*sinf(mPhi)*cosf(mTheta);
@@ -349,12 +349,12 @@ void AmbientLightApp::UpdateCamera(const GameTimer& gt)
 	XMStoreFloat4x4(&mView, view);
 }
 
-void AmbientLightApp::AnimateMaterials(const GameTimer& gt)
+void LitColumnsApp::AnimateMaterials(const GameTimer& gt)
 {
 	
 }
 
-void AmbientLightApp::UpdateObjectCBs(const GameTimer& gt)
+void LitColumnsApp::UpdateObjectCBs(const GameTimer& gt)
 {
 	auto currObjectCB = mCurrFrameResource->ObjectCB.get();
 	for(auto& e : mAllRitems)
@@ -378,7 +378,7 @@ void AmbientLightApp::UpdateObjectCBs(const GameTimer& gt)
 	}
 }
 
-void AmbientLightApp::UpdateMaterialCBs(const GameTimer& gt)
+void LitColumnsApp::UpdateMaterialCBs(const GameTimer& gt)
 {
 	auto currMaterialCB = mCurrFrameResource->MaterialCB.get();
 	for(auto& e : mMaterials)
@@ -404,7 +404,7 @@ void AmbientLightApp::UpdateMaterialCBs(const GameTimer& gt)
 	}
 }
 
-void AmbientLightApp::UpdateMainPassCB(const GameTimer& gt)
+void LitColumnsApp::UpdateMainPassCB(const GameTimer& gt)
 {
 	XMMATRIX view = XMLoadFloat4x4(&mView);
 	XMMATRIX proj = XMLoadFloat4x4(&mProj);
@@ -439,7 +439,7 @@ void AmbientLightApp::UpdateMainPassCB(const GameTimer& gt)
 	currPassCB->CopyData(0, mMainPassCB);
 }
 
-void AmbientLightApp::BuildRootSignature()
+void LitColumnsApp::BuildRootSignature()
 {
 	// Root parameter can be a table, root descriptor or root constants.
 	CD3DX12_ROOT_PARAMETER slotRootParameter[3];
@@ -471,7 +471,7 @@ void AmbientLightApp::BuildRootSignature()
 		IID_PPV_ARGS(mRootSignature.GetAddressOf())));
 }
 
-void AmbientLightApp::BuildShadersAndInputLayout()
+void LitColumnsApp::BuildShadersAndInputLayout()
 {
 	const D3D_SHADER_MACRO alphaTestDefines[] =
 	{
@@ -490,7 +490,7 @@ void AmbientLightApp::BuildShadersAndInputLayout()
     };
 }
 
-void AmbientLightApp::BuildShapeGeometry()
+void LitColumnsApp::BuildShapeGeometry()
 {
     GeometryGenerator geoGen;
 	GeometryGenerator::MeshData box = geoGen.CreateBox(1.5f, 0.5f, 1.5f, 3);
@@ -610,7 +610,7 @@ void AmbientLightApp::BuildShapeGeometry()
 	mGeometries[geo->Name] = std::move(geo);
 }
 
-void AmbientLightApp::BuildSkullGeometry()
+void LitColumnsApp::BuildSkullGeometry()
 {
 	std::ifstream fin("Models/skull.txt");
 
@@ -685,7 +685,7 @@ void AmbientLightApp::BuildSkullGeometry()
 	mGeometries[geo->Name] = std::move(geo);
 }
 
-void AmbientLightApp::BuildPSOs()
+void LitColumnsApp::BuildPSOs()
 {
     D3D12_GRAPHICS_PIPELINE_STATE_DESC opaquePsoDesc;
 
@@ -718,7 +718,7 @@ void AmbientLightApp::BuildPSOs()
     ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&opaquePsoDesc, IID_PPV_ARGS(&mOpaquePSO)));
 }
 
-void AmbientLightApp::BuildFrameResources()
+void LitColumnsApp::BuildFrameResources()
 {
     for(int i = 0; i < gNumFrameResources; ++i)
     {
@@ -727,7 +727,7 @@ void AmbientLightApp::BuildFrameResources()
     }
 }
 
-void AmbientLightApp::BuildMaterials()
+void LitColumnsApp::BuildMaterials()
 {
 	auto bricks0 = std::make_unique<Material>();
 	bricks0->Name = "bricks0";
@@ -767,7 +767,7 @@ void AmbientLightApp::BuildMaterials()
 	mMaterials["skullMat"] = std::move(skullMat);
 }
 
-void AmbientLightApp::BuildRenderItems()
+void LitColumnsApp::BuildRenderItems()
 {
 	auto boxRitem = std::make_unique<RenderItem>();
 	XMStoreFloat4x4(&boxRitem->World, XMMatrixScaling(2.0f, 2.0f, 2.0f)*XMMatrixTranslation(0.0f, 0.5f, 0.0f));
@@ -871,7 +871,7 @@ void AmbientLightApp::BuildRenderItems()
 		mOpaqueRitems.push_back(e.get());
 }
 
-void AmbientLightApp::DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::vector<RenderItem*>& ritems)
+void LitColumnsApp::DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::vector<RenderItem*>& ritems)
 {
     UINT objCBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(ObjectConstants));
     UINT matCBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(MaterialConstants));
