@@ -1,0 +1,38 @@
+/// INTRO /// -- ~28 seconds
+
+Lighting in modern computer graphics plays a key role. For instance, take a look at this sphere
+
+[Show unlit sphere from fig 9.1]
+
+Without the proper lighting it's indistinguishable from a circle, as our brain lacks the 
+tools it relies on to percieve depth. It is therefore, with a bit of maths, we calculate 
+shading and highlights. Turning this apparent circle into what is most definitely a sphere.
+
+[Show the lit version beside it]
+
+But how do we calculate those two things? And how can we use it to create convincing and
+appealing ligthing effects? 
+
+[Title card "Directional and Ambient Lighting"]
+
+/// MATHS /// -- 
+
+For the upcoming examples we will be using the local illuminations model, rather than the
+global model. The main difference is that local only computes the effects of 
+the given light sources on each model individually, as opposed to computing all of the 
+different interactions between the models and rays of light.
+
+As an example, these two models
+
+[Show the local model diagram fig 8.3]
+
+...the sphere remains lit even though in reality the wall would block the light. This is the downside
+of local illumination. It is however much cheaper to compute, and often prefered for real-time rendering.
+
+/// CODE ///
+
+
+
+
+
+////// RECYCLE BIN //////

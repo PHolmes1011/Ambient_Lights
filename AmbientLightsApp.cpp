@@ -1,5 +1,5 @@
 //***************************************************************************************
-// LitColumnsApp.cpp by Frank Luna (C) 2015 All Rights Reserved.
+// EnvLightingApp.cpp by Frank Luna (C) 2015 All Rights Reserved.
 //***************************************************************************************
 
 #include "../../Common/d3dApp.h"
@@ -51,13 +51,13 @@ struct RenderItem
     int BaseVertexLocation = 0;
 };
 
-class LitColumnsApp : public D3DApp
+class EnvLightingApp : public D3DApp
 {
 public:
-    LitColumnsApp(HINSTANCE hInstance);
-    LitColumnsApp(const LitColumnsApp& rhs) = delete;
-    LitColumnsApp& operator=(const LitColumnsApp& rhs) = delete;
-    ~LitColumnsApp();
+    EnvLightingApp(HINSTANCE hInstance);
+    EnvLightingApp(const EnvLightingApp& rhs) = delete;
+    EnvLightingApp& operator=(const EnvLightingApp& rhs) = delete;
+    ~EnvLightingApp();
 
     virtual bool Initialize()override;
 
@@ -137,7 +137,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance,
 
     try
     {
-        LitColumnsApp theApp(hInstance);
+        EnvLightingApp theApp(hInstance);
         if(!theApp.Initialize())
             return 0;
 
@@ -150,18 +150,18 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance,
     }
 }
 
-LitColumnsApp::LitColumnsApp(HINSTANCE hInstance)
+EnvLightingApp::EnvLightingApp(HINSTANCE hInstance)
     : D3DApp(hInstance)
 {
 }
 
-LitColumnsApp::~LitColumnsApp()
+EnvLightingApp::~EnvLightingApp()
 {
     if(md3dDevice != nullptr)
         FlushCommandQueue();
 }
 
-bool LitColumnsApp::Initialize()
+bool EnvLightingApp::Initialize()
 {
     if(!D3DApp::Initialize())
         return false;
@@ -193,7 +193,7 @@ bool LitColumnsApp::Initialize()
     return true;
 }
  
-void LitColumnsApp::OnResize()
+void EnvLightingApp::OnResize()
 {
     D3DApp::OnResize();
 
@@ -202,7 +202,7 @@ void LitColumnsApp::OnResize()
     XMStoreFloat4x4(&mProj, P);
 }
 
-void LitColumnsApp::Update(const GameTimer& gt)
+void EnvLightingApp::Update(const GameTimer& gt)
 {
     OnKeyboardInput(gt);
 	UpdateCamera(gt);
@@ -227,7 +227,7 @@ void LitColumnsApp::Update(const GameTimer& gt)
 	UpdateMainPassCB(gt);
 }
 
-void LitColumnsApp::Draw(const GameTimer& gt)
+void EnvLightingApp::Draw(const GameTimer& gt)
 {
     auto cmdListAlloc = mCurrFrameResource->CmdListAlloc;
 
@@ -284,7 +284,7 @@ void LitColumnsApp::Draw(const GameTimer& gt)
     mCommandQueue->Signal(mFence.Get(), mCurrentFence);
 }
 
-void LitColumnsApp::OnMouseDown(WPARAM btnState, int x, int y)
+void EnvLightingApp::OnMouseDown(WPARAM btnState, int x, int y)
 {
     mLastMousePos.x = x;
     mLastMousePos.y = y;
@@ -292,12 +292,12 @@ void LitColumnsApp::OnMouseDown(WPARAM btnState, int x, int y)
     SetCapture(mhMainWnd);
 }
 
-void LitColumnsApp::OnMouseUp(WPARAM btnState, int x, int y)
+void EnvLightingApp::OnMouseUp(WPARAM btnState, int x, int y)
 {
     ReleaseCapture();
 }
 
-void LitColumnsApp::OnMouseMove(WPARAM btnState, int x, int y)
+void EnvLightingApp::OnMouseMove(WPARAM btnState, int x, int y)
 {
     if((btnState & MK_LBUTTON) != 0)
     {
@@ -329,11 +329,11 @@ void LitColumnsApp::OnMouseMove(WPARAM btnState, int x, int y)
     mLastMousePos.y = y;
 }
  
-void LitColumnsApp::OnKeyboardInput(const GameTimer& gt)
+void EnvLightingApp::OnKeyboardInput(const GameTimer& gt)
 {
 }
  
-void LitColumnsApp::UpdateCamera(const GameTimer& gt)
+void EnvLightingApp::UpdateCamera(const GameTimer& gt)
 {
 	// Convert Spherical to Cartesian coordinates.
 	mEyePos.x = mRadius*sinf(mPhi)*cosf(mTheta);
@@ -349,12 +349,12 @@ void LitColumnsApp::UpdateCamera(const GameTimer& gt)
 	XMStoreFloat4x4(&mView, view);
 }
 
-void LitColumnsApp::AnimateMaterials(const GameTimer& gt)
+void EnvLightingApp::AnimateMaterials(const GameTimer& gt)
 {
 	
 }
 
-void LitColumnsApp::UpdateObjectCBs(const GameTimer& gt)
+void EnvLightingApp::UpdateObjectCBs(const GameTimer& gt)
 {
 	auto currObjectCB = mCurrFrameResource->ObjectCB.get();
 	for(auto& e : mAllRitems)
@@ -378,7 +378,7 @@ void LitColumnsApp::UpdateObjectCBs(const GameTimer& gt)
 	}
 }
 
-void LitColumnsApp::UpdateMaterialCBs(const GameTimer& gt)
+void EnvLightingApp::UpdateMaterialCBs(const GameTimer& gt)
 {
 	auto currMaterialCB = mCurrFrameResource->MaterialCB.get();
 	for(auto& e : mMaterials)
@@ -404,7 +404,7 @@ void LitColumnsApp::UpdateMaterialCBs(const GameTimer& gt)
 	}
 }
 
-void LitColumnsApp::UpdateMainPassCB(const GameTimer& gt)
+void EnvLightingApp::UpdateMainPassCB(const GameTimer& gt)
 {
 	XMMATRIX view = XMLoadFloat4x4(&mView);
 	XMMATRIX proj = XMLoadFloat4x4(&mProj);
@@ -439,7 +439,7 @@ void LitColumnsApp::UpdateMainPassCB(const GameTimer& gt)
 	currPassCB->CopyData(0, mMainPassCB);
 }
 
-void LitColumnsApp::BuildRootSignature()
+void EnvLightingApp::BuildRootSignature()
 {
 	// Root parameter can be a table, root descriptor or root constants.
 	CD3DX12_ROOT_PARAMETER slotRootParameter[3];
@@ -471,7 +471,7 @@ void LitColumnsApp::BuildRootSignature()
 		IID_PPV_ARGS(mRootSignature.GetAddressOf())));
 }
 
-void LitColumnsApp::BuildShadersAndInputLayout()
+void EnvLightingApp::BuildShadersAndInputLayout()
 {
 	const D3D_SHADER_MACRO alphaTestDefines[] =
 	{
@@ -490,7 +490,7 @@ void LitColumnsApp::BuildShadersAndInputLayout()
     };
 }
 
-void LitColumnsApp::BuildShapeGeometry()
+void EnvLightingApp::BuildShapeGeometry()
 {
     GeometryGenerator geoGen;
 	GeometryGenerator::MeshData box = geoGen.CreateBox(1.5f, 0.5f, 1.5f, 3);
@@ -610,13 +610,13 @@ void LitColumnsApp::BuildShapeGeometry()
 	mGeometries[geo->Name] = std::move(geo);
 }
 
-void LitColumnsApp::BuildSkullGeometry()
+void EnvLightingApp::BuildSkullGeometry()
 {
-	std::ifstream fin("Models/skull.txt");
+	std::ifstream fin("Models/car.txt");
 
 	if(!fin)
 	{
-		MessageBox(0, L"Models/skull.txt not found.", 0, 0);
+		MessageBox(0, L"Models/car.txt not found.", 0, 0);
 		return;
 	}
 
@@ -656,7 +656,7 @@ void LitColumnsApp::BuildSkullGeometry()
 	const UINT ibByteSize = (UINT)indices.size() * sizeof(std::int32_t);
 
 	auto geo = std::make_unique<MeshGeometry>();
-	geo->Name = "skullGeo";
+	geo->Name = "carGeo";
 
 	ThrowIfFailed(D3DCreateBlob(vbByteSize, &geo->VertexBufferCPU));
 	CopyMemory(geo->VertexBufferCPU->GetBufferPointer(), vertices.data(), vbByteSize);
@@ -680,12 +680,12 @@ void LitColumnsApp::BuildSkullGeometry()
 	submesh.StartIndexLocation = 0;
 	submesh.BaseVertexLocation = 0;
 
-	geo->DrawArgs["skull"] = submesh;
+	geo->DrawArgs["car"] = submesh;
 
 	mGeometries[geo->Name] = std::move(geo);
 }
 
-void LitColumnsApp::BuildPSOs()
+void EnvLightingApp::BuildPSOs()
 {
     D3D12_GRAPHICS_PIPELINE_STATE_DESC opaquePsoDesc;
 
@@ -718,7 +718,7 @@ void LitColumnsApp::BuildPSOs()
     ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&opaquePsoDesc, IID_PPV_ARGS(&mOpaquePSO)));
 }
 
-void LitColumnsApp::BuildFrameResources()
+void EnvLightingApp::BuildFrameResources()
 {
     for(int i = 0; i < gNumFrameResources; ++i)
     {
@@ -727,50 +727,50 @@ void LitColumnsApp::BuildFrameResources()
     }
 }
 
-void LitColumnsApp::BuildMaterials()
+void EnvLightingApp::BuildMaterials()
 {
 	auto bricks0 = std::make_unique<Material>();
 	bricks0->Name = "bricks0";
 	bricks0->MatCBIndex = 0;
 	bricks0->DiffuseSrvHeapIndex = 0;
-	bricks0->DiffuseAlbedo = XMFLOAT4(Colors::ForestGreen);
+	bricks0->DiffuseAlbedo = XMFLOAT4(Colors::RosyBrown);
 	bricks0->FresnelR0 = XMFLOAT3(0.02f, 0.02f, 0.02f);
-	bricks0->Roughness = 0.1f;
+	bricks0->Roughness = 0.8f;
 
 	auto stone0 = std::make_unique<Material>();
 	stone0->Name = "stone0";
 	stone0->MatCBIndex = 1;
 	stone0->DiffuseSrvHeapIndex = 1;
-	stone0->DiffuseAlbedo = XMFLOAT4(Colors::LightSteelBlue);
+	stone0->DiffuseAlbedo = XMFLOAT4(Colors::ForestGreen);
 	stone0->FresnelR0 = XMFLOAT3(0.05f, 0.05f, 0.05f);
-	stone0->Roughness = 0.3f;
+	stone0->Roughness = 0.8f;
  
 	auto tile0 = std::make_unique<Material>();
 	tile0->Name = "tile0";
 	tile0->MatCBIndex = 2;
 	tile0->DiffuseSrvHeapIndex = 2;
-	tile0->DiffuseAlbedo = XMFLOAT4(Colors::LightGray);
+	tile0->DiffuseAlbedo = XMFLOAT4(Colors::SlateGray);
 	tile0->FresnelR0 = XMFLOAT3(0.02f, 0.02f, 0.02f);
 	tile0->Roughness = 0.2f;
 
-	auto skullMat = std::make_unique<Material>();
-	skullMat->Name = "skullMat";
-	skullMat->MatCBIndex = 3;
-	skullMat->DiffuseSrvHeapIndex = 3;
-	skullMat->DiffuseAlbedo = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-	skullMat->FresnelR0 = XMFLOAT3(0.05f, 0.05f, 0.05);
-	skullMat->Roughness = 0.3f;
+	auto carMat = std::make_unique<Material>();
+	carMat->Name = "carMat";
+	carMat->MatCBIndex = 3;
+	carMat->DiffuseSrvHeapIndex = 3;
+	carMat->DiffuseAlbedo = XMFLOAT4(1.0f, 0.02f, 0.02f, 1.0f);
+	carMat->FresnelR0 = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	carMat->Roughness = 0.0f;
 	
 	mMaterials["bricks0"] = std::move(bricks0);
 	mMaterials["stone0"] = std::move(stone0);
 	mMaterials["tile0"] = std::move(tile0);
-	mMaterials["skullMat"] = std::move(skullMat);
+	mMaterials["carMat"] = std::move(carMat);
 }
 
-void LitColumnsApp::BuildRenderItems()
+void EnvLightingApp::BuildRenderItems()
 {
 	auto boxRitem = std::make_unique<RenderItem>();
-	XMStoreFloat4x4(&boxRitem->World, XMMatrixScaling(2.0f, 2.0f, 2.0f)*XMMatrixTranslation(0.0f, 0.5f, 0.0f));
+	XMStoreFloat4x4(&boxRitem->World, XMMatrixScaling(2.0f, 2.0f, 4.0f)*XMMatrixTranslation(0.0f, 0.5f, 0.0f));
 	XMStoreFloat4x4(&boxRitem->TexTransform, XMMatrixScaling(1.0f, 1.0f, 1.0f));
 	boxRitem->ObjCBIndex = 0;
 	boxRitem->Mat = mMaterials["stone0"].get();
@@ -793,17 +793,17 @@ void LitColumnsApp::BuildRenderItems()
     gridRitem->BaseVertexLocation = gridRitem->Geo->DrawArgs["grid"].BaseVertexLocation;
 	mAllRitems.push_back(std::move(gridRitem));
 
-	auto skullRitem = std::make_unique<RenderItem>();
-	XMStoreFloat4x4(&skullRitem->World, XMMatrixScaling(0.5f, 0.5f, 0.5f)*XMMatrixTranslation(0.0f, 1.0f, 0.0f));
-	skullRitem->TexTransform = MathHelper::Identity4x4();
-	skullRitem->ObjCBIndex = 2;
-	skullRitem->Mat = mMaterials["skullMat"].get();
-	skullRitem->Geo = mGeometries["skullGeo"].get();
-	skullRitem->PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-	skullRitem->IndexCount = skullRitem->Geo->DrawArgs["skull"].IndexCount;
-	skullRitem->StartIndexLocation = skullRitem->Geo->DrawArgs["skull"].StartIndexLocation;
-	skullRitem->BaseVertexLocation = skullRitem->Geo->DrawArgs["skull"].BaseVertexLocation;
-	mAllRitems.push_back(std::move(skullRitem));
+	auto carRitem = std::make_unique<RenderItem>();
+	XMStoreFloat4x4(&carRitem->World, XMMatrixScaling(0.5f, 0.5f, 0.5f)*XMMatrixTranslation(0.0f, 2.2f, 0.0f));
+	carRitem->TexTransform = MathHelper::Identity4x4();
+	carRitem->ObjCBIndex = 2;
+	carRitem->Mat = mMaterials["carMat"].get();
+	carRitem->Geo = mGeometries["carGeo"].get();
+	carRitem->PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	carRitem->IndexCount = carRitem->Geo->DrawArgs["car"].IndexCount;
+	carRitem->StartIndexLocation = carRitem->Geo->DrawArgs["car"].StartIndexLocation;
+	carRitem->BaseVertexLocation = carRitem->Geo->DrawArgs["car"].BaseVertexLocation;
+	mAllRitems.push_back(std::move(carRitem));
 
 	XMMATRIX brickTexTransform = XMMatrixScaling(1.0f, 1.0f, 1.0f);
 	UINT objCBIndex = 3;
@@ -840,7 +840,7 @@ void LitColumnsApp::BuildRenderItems()
 		rightCylRitem->StartIndexLocation = rightCylRitem->Geo->DrawArgs["cylinder"].StartIndexLocation;
 		rightCylRitem->BaseVertexLocation = rightCylRitem->Geo->DrawArgs["cylinder"].BaseVertexLocation;
 
-		XMStoreFloat4x4(&leftSphereRitem->World, leftSphereWorld);
+		XMStoreFloat4x4(&leftSphereRitem->World, XMMatrixScaling(3.0f, 3.0f, 3.0f)*leftSphereWorld);
 		leftSphereRitem->TexTransform = MathHelper::Identity4x4();
 		leftSphereRitem->ObjCBIndex = objCBIndex++;
 		leftSphereRitem->Mat = mMaterials["stone0"].get();
@@ -850,7 +850,7 @@ void LitColumnsApp::BuildRenderItems()
 		leftSphereRitem->StartIndexLocation = leftSphereRitem->Geo->DrawArgs["sphere"].StartIndexLocation;
 		leftSphereRitem->BaseVertexLocation = leftSphereRitem->Geo->DrawArgs["sphere"].BaseVertexLocation;
 
-		XMStoreFloat4x4(&rightSphereRitem->World, rightSphereWorld);
+		XMStoreFloat4x4(&rightSphereRitem->World, XMMatrixScaling(3.0f, 3.0f, 3.0f) * rightSphereWorld);
 		rightSphereRitem->TexTransform = MathHelper::Identity4x4();
 		rightSphereRitem->ObjCBIndex = objCBIndex++;
 		rightSphereRitem->Mat = mMaterials["stone0"].get();
@@ -871,7 +871,7 @@ void LitColumnsApp::BuildRenderItems()
 		mOpaqueRitems.push_back(e.get());
 }
 
-void LitColumnsApp::DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::vector<RenderItem*>& ritems)
+void EnvLightingApp::DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::vector<RenderItem*>& ritems)
 {
     UINT objCBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(ObjectConstants));
     UINT matCBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(MaterialConstants));
