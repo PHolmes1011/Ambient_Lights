@@ -1,0 +1,180 @@
+3 second intro
+
+/// MATHS /// -- 2 minutes 27 seconds -------------------------------------------------------------
+
+Ambient lighting describes a kind of uniform dim light that illuminates a scene from rays 
+that have scattered from another source. For realtime rendering we can use the local 
+illuminations model to quickly and easily calculate ambient lighting using this simple formula
+
+[Show eq. 8.2    c = A x m ]
+
+...where the components of A (the RGBA amount of ambient light the surface recieves) are
+multiplyed together with m (the RGBA amount of light the surface relfects). This is much easier 
+and quicker to compute and achieves uniformly illuminating the scene a little. 
+
+The downside with this model is light can be shone on a surface through a wall.
+
+[Show figure 8.3]
+
+This isn't a problem in the global illumination model where you could fairly accurately simulate it
+using ray tracing to see where the light has actually scattered from using hundreds of vectors 
+and work out its colour and intensity from that. But this takes time and is more common in
+pre-rendered media.
+
+[https://assets.rockpapershotgun.com/images/2019/04/NVidia-DXR-Ray-tracing-techniques.png]
+
+This however still doesn't add shading or highlights, known respectively as diffuse and specular
+lighting. But for these we need a direction and intensity of an incoming light.
+
+For this we can use directional lighting (aka parallel lighting) which can be imagined as the
+rays of light from the sun striking parallel across the whole scene and because they're 
+parallel they all use the same vector.
+
+[Show figure 8.23]
+
+To find the intensity we use Lambert's Cosine Law,
+[Show function]
+The L.n is the dot product of the light vector (opposite the direction the light is heading) and the
+normal to the surface it's colliding with. Telling us the angle of this
+collision which thusly tells us how intense the lighting should be. Since the intensity of 
+light drops off as the angle increases from 0 (perpendicular) to 180 degrees where the surface
+is facing away from the light and is thus dark.
+
+The max is used to prevent values from straying into the negative, which would cause noticable
+lighting errors.
+
+We also need to account for surface and light colour so we add a component wise multiplication
+of B (the quantity of incoming light) and m (the material's albedo colour). Giving us this.
+
+[Show eq 8.1]
+
+It can still be improved however with specular lighting, to add shine when light reflects off the surface. 
+For this we need a much larger and more complex equation.
+
+[Show eq 8.3]
+
+The first part is recogniseable from previous equations, it's Lambert's
+cosine law which tells us the angle between the light vector L and the normal n. Since light striking
+perpendicular is more likely to be refracted rather than reflected, in line with the Fresnel effect.
+
+The next part is the component wise multiplication of the quantity of incoming direct light BL and 
+the amount of light reflected about h into the eye. Where h is the half way vector between the light
+vector and the vector to the eye, giving the angle used ah. This of course controls how bright or dim
+the shine appears.
+
+[Show figure 8.18]
+
+This is then multiplied with the last part of our equation, the roughness. This is important, as the
+roughness determines the spread of micro-normals. The wider the spread, the dimmer the shine is and
+larger the gradient between shiney and non shiney. m is how rough the object is, while 8 is added and 
+subsequently divided to preserve light energy. This is then multiplied with the angle between the 
+surface normal n and the halfway vector h itself multiplied by the roughness.
+
+All together this gives us cs, the amount of lighting to add to the point.
+
+But how would we go about actually implementing all this maths into code.
+
+/// CODE /// -- 2 minutes 30 seconds --------------------------------------------------------------
+
+Let's take a look at Frank Luna's example. The scene shown has had all lighting removed. The colour 
+being displayed to the screen is purely from returning the diffuse albedo inside the shader, passed
+to it from the material constant buffer.
+
+A shader is what we use to control the position and colour of pixels and vertices in our scene and is
+vital for modern 3D games. If we look inside the example one, with no lighting, we can see it just 
+outputs the colour it already was. This is known as a pass-through function.
+But of course we want to calculate and add ambient and directional lighting. 
+
+Ambient lighting isn't too hard to calculate, and only requires the formula described in the
+previous section.
+
+float4 ambient = gAmbientLight*gDiffuseAlbedo    ==    c = A x m
+ 
+Now let's look at our scene again. Notice how it made it appear darker. Because we're now calculating
+lighting, and not just relying on the colour, we need to add more of it to brighten everything up. Like
+a dark moonlight night, there is light just not a lot of it.
+This phenomenom is common in games, for example Half-Life 2 with and without lighting.
+
+So let's add more lighting, some directional lighting. This is a bit more complicated, and requires
+all the math discussed in the previous segment.
+
+First finding the vector from the vertex to the eye.
+
+float3 toEyeW = normalize(gEyePosW - pin.PosW);
+
+Working out diffuse lighting with Lambert's cosine law and the light source's strength
+
+float ndotl = max(dot(lightVec, normal), 0.0f);
+float3 lightStrength = L.Strength * ndotl;
+
+Then specular lighting with the roughness factor multiplied with the fresnel factor
+
+float roughnessFactor = (m + 8.0f)*pow(max(dot(halfVec, normal), 0.0f), m) / 8.0f;
+float3 fresnelFactor = SchlickFresnel(mat.FresnelR0, halfVec, lightVec);
+
+float3 specAlbedo = fresnelFactor*roughnessFactor;
+
+Before being combined and then added to the ambient light
+
+return (mat.DiffuseAlbedo.rgb + specAlbedo) * lightStrength;
+
+float4 litColor = ambient + directLight;
+
+Giving us our now fully lit scene.
+
+////// RECYCLE BIN //////
+
+Let's first look at ambient lighting. This isn't too hard to add, using the formula from the previous
+section we take the gAmbientLight (which is the ambient light float4 describing RGBA, with values from 0 to 1)
+and multiply it with gDiffuseAlbedo (the colour the material reflects). Both of these variables come
+from the cpp file through the pass constant buffer each update, and can be found here.
+
+We could return this now, but it's common practice to finally set the aplha channel to be the aplha channel
+of the diffuse albedo. This is to prevent the result of the maths potetially altering the aplha of a material,
+say if the light alpha was .2f and the diffuse aplha was 1.0f it would become .2f which wouldn't make sense.
+
+
+
+This is the method used in Frank Luna's example. Going line by line, we first work out the vector from
+the position of the vertex (calculated from the vertex shader) to the eye. This will be used later on
+when calculating specular lighting, but for now it's stored in a variable and we move on to the next step.
+
+The next is shininess, which is used for the same purpose and calculated by simply subtracting the roughness
+of our material from 1. Effectively flipping it, low roughness values become high shininess values.
+
+After that we define a material struct mat out of the information passed though the material constant buffer
+and shadow factor which can uniformly brighten everything or dim everything (with low values making things darker
+and high values making things brighter).
+
+Now we have all the information we need we can pass it to the CalculateLighting function, declared in a seperate
+hlsl file and included like a header file. This is where things go up a notch. The function checks to see what
+kind of lights we have in the scene as well as how many and then for each of them multiplies the shadow factor
+with their own type specific function.
+
+-----
+
+We'll just be looking at the ComputeDirectionalLight function for now, as it's what we want for our example.
+
+It begins be defining the light vector as opposite to the light direction. This is because we need to find
+the angle between the light vector and the normal and if the vector pointed the same direction the angle would
+be inversed. We could of course get around this by defining the direction of light as pointing in the opposite
+direction to begin with, but there's no real reason to do so and inverting the light vector is common practice.
+
+Regardless, we use this vector work out the light strength by finding the angle with Lambert's cosine law and 
+multiplying it with the strength or brightness of the light to give us the strength of the light at the vertex.
+
+We now run this into our BlinnPhong function, which calculates specular and diffuse lighting using all the values
+we've calculated thus far. It takes its name from the method of shading developed by Mr Blinn to create a good
+looking effect simialr to Phong by working out the values of each vertex and then using the more efficient 
+Gouraud shading method to interpolate between them.
+
+First we need to scale the shininess up by 256, otherwise we won't be able to see the highlights when all
+is calculated. Then we find the half way vector between our light and normal vectors. This is followed by
+the specular lighting equation broken up into the roughness factor and fresnel factor, which are then
+multiplied together giving us our specular albedo. The next part is just to make sure our values stay
+between zero and one, as the comment says.
+
+Finally we can return the colour of the material with specular lighting added multiplied by the diffuse lighting.
+Taking us all the way back to our starting hlsl file, where we only need to combine it with the ambient lighting
+and we're finished. With this we have the colour values of each vertex and can leave DirectX with the GPU to 
+use the more efficient Gouraud shading method to interpolate between them, in line with Jim Blinn's Blinn Phong method.

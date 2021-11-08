@@ -41,6 +41,21 @@ float3 SchlickFresnel(float3 R0, float3 normal, float3 lightVec)
     return reflectPercent;
 }
 
+//---------------------------------------------------------------------------------------
+// Rounds the calculated RGBA values to within three tones
+//---------------------------------------------------------------------------------------
+float3 ThreeToneShading(float3 input)
+{
+    if ((input.r && input.g && input.b >= 0.f) && (input.r && input.g && input.b < .15f)) {
+        input *= 0.f;
+    }
+    else if ((input.r && input.g && input.b >= .95f) && (input.r && input.g && input.b < 1.f)) {
+        input *= 2.f;
+    }
+
+    return input;
+}
+
 float3 BlinnPhong(float3 lightStrength, float3 lightVec, float3 normal, float3 toEye, Material mat)
 {
     const float m = mat.Shininess * 256.0f;
@@ -55,7 +70,7 @@ float3 BlinnPhong(float3 lightStrength, float3 lightVec, float3 normal, float3 t
     // doing LDR rendering.  So scale it down a bit.
     specAlbedo = specAlbedo / (specAlbedo + 1.0f);
 
-    return (mat.DiffuseAlbedo.rgb + specAlbedo) * lightStrength;
+    return (mat.DiffuseAlbedo.rgb + ThreeToneShading(specAlbedo)) * ThreeToneShading(lightStrength);
 }
 
 //---------------------------------------------------------------------------------------
