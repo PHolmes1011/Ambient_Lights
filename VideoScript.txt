@@ -1,38 +1,131 @@
-/// INTRO /// -- ~28 seconds
+3 second intro
 
-Lighting in modern computer graphics plays a key role. For instance, take a look at this sphere
+/// MATHS /// -- 2 minutes 27 seconds ------------------------------------------------------------- 2:50
 
-[Show unlit sphere from fig 9.1]
+Ambient lighting describes a kind of uniform dim light that illuminates a scene from rays 
+that have scattered from another source. For realtime rendering we can use the local 
+illuminations model to quickly and easily calculate ambient lighting using this simple formula
 
-Without the proper lighting it's indistinguishable from a circle, as our brain lacks the 
-tools it relies on to percieve depth. It is therefore, with a bit of maths, we calculate 
-shading and highlights. Turning this apparent circle into what is most definitely a sphere.
+[Show eq. 8.2    c = A x m ]
 
-[Show the lit version beside it]
+...where the components of A (the RGBA amount of ambient light the surface recieves) are
+multiplyed together with m (the RGBA amount of light the surface relfects). This is much easier 
+and quicker to compute and achieves uniformly illuminating the scene a little. 
 
-But how do we calculate those two things? And how can we use it to create convincing and
-appealing ligthing effects? 
+The downside with this model is light can be shone on a surface through a wall.
 
-[Title card "Directional and Ambient Lighting"]
+[Show figure 8.3]
 
-/// MATHS /// -- 
+This isn't a problem in the global illumination model where you could fairly accurately simulate it
+using ray tracing to see where the light has actually scattered from using hundreds of vectors 
+and work out its colour and intensity from that. But this takes time and is more common in
+pre-rendered media.
 
-For the upcoming examples we will be using the local illuminations model, rather than the
-global model. The main difference is that local only computes the effects of 
-the given light sources on each model individually, as opposed to computing all of the 
-different interactions between the models and rays of light.
+[https://assets.rockpapershotgun.com/images/2019/04/NVidia-DXR-Ray-tracing-techniques.png]
 
-As an example, these two models
+This however still doesn't add shading or highlights, known respectively as diffuse and specular
+lighting. But for these we need a direction and intensity of an incoming light.
 
-[Show the local model diagram fig 8.3]
+For this we can use directional lighting (aka parallel lighting) which can be imagined as the
+rays of light from the sun striking parallel across the whole scene and because they're 
+parallel they all use the same vector.
 
-...the sphere remains lit even though in reality the wall would block the light. This is the downside
-of local illumination. It is however much cheaper to compute, and often prefered for real-time rendering.
+[Show figure 8.23]
 
-/// CODE ///
+To find the intensity we use Lambert's Cosine Law,
+[Show function]
+The L.n is the dot product of the light vector (opposite the direction the light is heading) and the
+normal to the surface it's colliding with. Telling us the angle of this
+collision which thusly tells us how intense the lighting should be. Since the intensity of 
+light drops off as the angle increases from 0 (perpendicular) to 180 degrees where the surface
+is facing away from the light and is thus dark.
 
+The max is used to prevent values from straying into the negative, which would cause noticable
+lighting errors.
 
+We also need to account for surface and light colour so we add a component wise multiplication
+of B (the quantity of incoming light) and m (the material's albedo colour). Giving us this.
 
+[Show eq 8.1]
 
+next specular lighting, to add shine when light reflects off the surface. 
+For this we need a much larger and more complex equation.
+
+[Show eq 8.3]
+
+The first part is recogniseable from previous equations, it's Lambert's cosine law which tells us 
+the angle between L and n. As light striking perpendicular is more likely to be refracted 
+rather than reflected and vise versa, in line with the Fresnel effect.
+
+Then the quantity of incoming direct light BL and the RGB of light reflected about ah into the eye
+are multiplied together, controlling how bright or dim the shine appears.
+
+[Show figure 8.18]
+
+And finally roughness. This is important, as the roughness m determines how the shine appears.
+This is then multiplied with the angle between n and h to the power of m.
+
+*8 is added and divided to conserve light energy
+
+But how would we go about actually implementing all this maths into code.
+
+/// CODE /// -- 2 minutes 30 seconds -------------------------------------------------------------- 1:08
+
+Let's take a look at Frank Luna's example. The scene shown has had all lighting removed. The colour 
+being displayed to the screen is purely from returning the diffuse albedo inside the shader, passed
+to it from the material constant buffer. This is known as a pass-through function.
+But of course we want to calculate and add ambient and directional lighting. 
+
+Ambient lighting isn't too hard to calculate, and only requires the formula described in the
+previous section.
+
+float4 ambient = gAmbientLight*gDiffuseAlbedo    ==    c = A x m
+ 
+Looking at our scene again, it appears darker. This is because we're now calculating
+lighting, and not just relying on the colour, we'll need to add more of it to brighten everything up.
+This phenomenom is common in games, for example Half-Life 2 with and without lighting.
+
+Adding directional lighting is a bit more complicated, and requires
+all the math discussed in the previous segment.
+
+First finding the vector from the vertex to the eye.
+
+float3 toEyeW = normalize(gEyePosW - pin.PosW);
+
+Working out diffuse lighting with Lambert's cosine law and the light source's strength
+
+float ndotl = max(dot(lightVec, normal), 0.0f);
+float3 lightStrength = L.Strength * ndotl;
+
+Then specular lighting with the roughness factor multiplied with the fresnel factor
+
+float roughnessFactor = (m + 8.0f)*pow(max(dot(halfVec, normal), 0.0f), m) / 8.0f;
+float3 fresnelFactor = SchlickFresnel(mat.FresnelR0, halfVec, lightVec);
+
+float3 specAlbedo = fresnelFactor*roughnessFactor;
+
+Before being combined and then added to the ambient light
+
+return (mat.DiffuseAlbedo.rgb + specAlbedo) * lightStrength;
+
+float4 litColor = ambient + directLight;
+
+Giving us our now fully lit scene.
+
+DirectX and the GPU will handle lighting the points between the verticies using the
+Blinn-Phong method, which was developed by Jim Blinn as a way of creating lighting
+effects similar to the phong method but instead using Gouraud shading. Which is 
+more efficent leading to better performance.
+
+With the colour of each vertex having been calculated we can change it however we
+choose. For instance, by rounding the light values to be within specific boundries
+and increasing the shadow factor we can create a cartoony cel shaded look for our scene.
+
+Or why not make it sunset, by changing the colours of the lighting and haveing it come
+from a lower angle to simulate the setting sun. Of course it'd look better with some
+long shadows, but they'll be covered another time.
+
+And for those who just want to set the world on fire. We can add a button along with
+a recursive function in an if statement to do this.
 
 ////// RECYCLE BIN //////

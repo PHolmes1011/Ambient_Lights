@@ -85,7 +85,10 @@ private:
     void BuildFrameResources();
     void BuildMaterials();
     void BuildRenderItems();
-    void DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::vector<RenderItem*>& ritems);
+	void DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::vector<RenderItem*>& ritems);
+
+	float IncreaseLight(const GameTimer& gt, float value);
+	float DecreaseLight(const GameTimer& gt, float value);
  
 private:
 
@@ -125,6 +128,14 @@ private:
     float mRadius = 15.0f;
 
     POINT mLastMousePos;
+
+	float mLightIntensity1 = 0.6f;
+	float mLightIntensity2 = 0.3f;
+	float mLightIntensity3 = 0.15f;
+
+	bool mNuke = false;
+	float mEndTime = 2.f;
+	float mTime = 0.f;
 };
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance,
@@ -221,10 +232,38 @@ void EnvLightingApp::Update(const GameTimer& gt)
         CloseHandle(eventHandle);
     }
 
+	if ((GetAsyncKeyState(VK_SPACE) & 0x01))
+		mNuke = true;
+	if (mNuke) {
+		if (mTime < mEndTime) {
+			mLightIntensity1 = IncreaseLight(gt, mLightIntensity1);
+			mLightIntensity2 = IncreaseLight(gt, mLightIntensity2);
+			mLightIntensity3 = IncreaseLight(gt, mLightIntensity3);
+
+			mTime += gt.DeltaTime();
+		}
+		else if ((mTime > mEndTime) && (mTime <= mEndTime + 20.f)) {
+			mLightIntensity1 = DecreaseLight(gt, mLightIntensity1);
+			mLightIntensity2 = DecreaseLight(gt, mLightIntensity2);
+			mLightIntensity3 = DecreaseLight(gt, mLightIntensity3);
+
+			mTime += gt.DeltaTime();
+		}
+	}
+
 	AnimateMaterials(gt);
 	UpdateObjectCBs(gt);
 	UpdateMaterialCBs(gt);
 	UpdateMainPassCB(gt);
+}
+
+float EnvLightingApp::IncreaseLight(const GameTimer& gt, float value)
+{
+	return value += 5.f * gt.DeltaTime();
+}
+float EnvLightingApp::DecreaseLight(const GameTimer& gt, float value)
+{
+	return value -= .5f * gt.DeltaTime();
 }
 
 void EnvLightingApp::Draw(const GameTimer& gt)
@@ -427,13 +466,13 @@ void EnvLightingApp::UpdateMainPassCB(const GameTimer& gt)
 	mMainPassCB.FarZ = 1000.0f;
 	mMainPassCB.TotalTime = gt.TotalTime();
 	mMainPassCB.DeltaTime = gt.DeltaTime();
-	mMainPassCB.AmbientLight = { 0.25f, 0.25f, 0.35f, 1.0f };
-	mMainPassCB.Lights[0].Direction = { 0.57735f, -0.57735f, 0.57735f };
-	mMainPassCB.Lights[0].Strength = { 0.6f, 0.6f, 0.6f };
-	mMainPassCB.Lights[1].Direction = { -0.57735f, -0.57735f, 0.57735f };
-	mMainPassCB.Lights[1].Strength = { 0.3f, 0.3f, 0.3f };
-	mMainPassCB.Lights[2].Direction = { 0.0f, -0.707f, -0.707f };
-	mMainPassCB.Lights[2].Strength = { 0.15f, 0.15f, 0.15f };
+	mMainPassCB.AmbientLight = { .8f, 0.44f, 0.01f, 1.0f };
+	mMainPassCB.Lights[0].Direction = { 0.17735f, -0.17735f, 0.17735f };
+	mMainPassCB.Lights[0].Strength = { mLightIntensity1, mLightIntensity1, mLightIntensity1 };
+	mMainPassCB.Lights[1].Direction = { 1.17735f, -0.17735f, 0.17735f };
+	mMainPassCB.Lights[1].Strength = { mLightIntensity2, mLightIntensity2, mLightIntensity2 };
+	mMainPassCB.Lights[2].Direction = { 0.10f, -0.107f, -0.107f };
+	mMainPassCB.Lights[2].Strength = { mLightIntensity3, mLightIntensity3, mLightIntensity3 };
 
 	auto currPassCB = mCurrFrameResource->PassCB.get();
 	currPassCB->CopyData(0, mMainPassCB);
